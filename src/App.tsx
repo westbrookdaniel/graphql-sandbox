@@ -15,7 +15,6 @@ import {
   TabsTrigger,
 } from "./components/ui/tabs";
 import { XMarkIcon } from "@heroicons/react/16/solid";
-import { ModeToggle } from "./components/mode-toggle";
 import { useStore } from "./store";
 import {
   ResizableHandle,
@@ -23,7 +22,6 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { Badge } from "./components/ui/badge";
-import { finished } from "stream";
 
 const theme = tokyoNightInit({
   settings: {
