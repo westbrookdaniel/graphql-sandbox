@@ -20,8 +20,7 @@ const queryFile = `query($query: JSON!) {
     id
     task
   }
-}
-`;
+}`;
 
 interface Tab {
   id: string;

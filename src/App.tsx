@@ -17,6 +17,11 @@ import {
 import { XMarkIcon } from "@heroicons/react/16/solid";
 import { ModeToggle } from "./components/mode-toggle";
 import { useStore } from "./store";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 const theme = tokyoNight;
 
@@ -93,71 +98,95 @@ function App() {
   }
 
   return (
-    <Tabs value={selected} onValueChange={setSelected} className="p-4">
-      <div className="flex w-full justify-between">
-        <TabsList>
-          {tabs.map((t) => (
-            <TabsTrigger value={t.id}>
-              <div className="flex w-full justify-between">
-                <p>{t.name}</p>
-                {tabs.length === 1 || selected !== t.id ? null : (
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => {
-                      setSelected(
-                        tabs.indexOf(t) === 0 ? tabs[1].id : tabs[0].id,
-                      );
-                      deleteTab(t.id);
-                    }}
-                  >
-                    <XMarkIcon className="size-4 text-primary" />
-                  </Button>
-                )}
-              </div>
-            </TabsTrigger>
-          ))}
-          <TabsFakeTrigger
-            value="add"
-            onClick={() => {
-              const id = createTab();
-              setSelected(id);
-            }}
-          >
-            Add +
-          </TabsFakeTrigger>
-        </TabsList>
+    <div className="min-h-screen flex flex-col">
+      <Tabs
+        value={selected}
+        onValueChange={setSelected}
+        className="p-4 flex-1 flex flex-col gap-3"
+      >
+        <div className="flex w-full justify-between">
+          <TabsList>
+            {tabs.map((t) => (
+              <TabsTrigger value={t.id}>
+                <div className="flex w-full justify-between">
+                  <p>{t.name}</p>
+                  {tabs.length === 1 || selected !== t.id ? null : (
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => {
+                        setSelected(
+                          tabs.indexOf(t) === 0 ? tabs[1].id : tabs[0].id,
+                        );
+                        deleteTab(t.id);
+                      }}
+                    >
+                      <XMarkIcon className="size-4 text-primary" />
+                    </Button>
+                  )}
+                </div>
+              </TabsTrigger>
+            ))}
+            <TabsFakeTrigger
+              value="add"
+              onClick={() => {
+                const id = createTab();
+                setSelected(id);
+              }}
+            >
+              Add +
+            </TabsFakeTrigger>
+          </TabsList>
 
-        <div className="flex gap-2">
-          <Button onClick={handleRun}>Run</Button>
-          <ModeToggle />
+          <div className="flex gap-2">
+            <Button onClick={handleRun}>Run</Button>
+            <ModeToggle />
+          </div>
         </div>
-      </div>
-      <div className="flex flex-col gap-2 mt-3">
-        <CodeMirror
-          className="flex-1 rounded-lg overflow-auto"
-          value={tab.script}
-          theme={theme}
-          extensions={[javascript()]}
-          onChange={(v) => updateTab({ id: tab.id, script: v })}
-        />
-        <CodeMirror
-          className="flex-1 rounded-lg overflow-auto"
-          value={tab.query}
-          theme={theme}
-          extensions={[graphql()]}
-          onChange={(v) => updateTab({ id: tab.id, query: v })}
-          onCreateEditor={(v) => (view.current = v)}
-        />
 
-        <CodeMirror
-          className="flex-1 rounded-lg overflow-auto"
-          value={JSON.stringify(tab.output, undefined, 2)}
-          theme={theme}
-          extensions={[json()]}
-        />
-      </div>
-    </Tabs>
+        <ResizablePanelGroup
+          direction="horizontal"
+          className="max-w-full rounded-lg border flex-1"
+        >
+          <ResizablePanel defaultSize={50}>
+            <ResizablePanelGroup direction="vertical">
+              <ResizablePanel defaultSize={50} className="flex flex-col">
+                <CodeMirror
+                  className="flex-1 overflow-auto"
+                  height="100%"
+                  value={tab.query}
+                  theme={theme}
+                  extensions={[graphql()]}
+                  onChange={(v) => updateTab({ id: tab.id, query: v })}
+                  onCreateEditor={(v) => (view.current = v)}
+                />
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={75} className="flex flex-col">
+                <CodeMirror
+                  className="flex-1 overflow-auto"
+                  height="100%"
+                  value={tab.script}
+                  theme={theme}
+                  extensions={[javascript()]}
+                  onChange={(v) => updateTab({ id: tab.id, script: v })}
+                />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={50} className="flex flex-col">
+            <CodeMirror
+              className="flex-1 overflow-auto"
+              height="100%"
+              value={JSON.stringify(tab.output, undefined, 2)}
+              theme={theme}
+              extensions={[json()]}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </Tabs>
+    </div>
   );
 }
 
