@@ -5,6 +5,9 @@ import { graphql, updateSchema } from "cm6-graphql";
 import * as Comlink from "comlink";
 import { IntrospectionQuery } from "./intro";
 import { buildClientSchema } from "graphql";
+import { tokyoNight } from "@uiw/codemirror-theme-tokyo-night";
+
+const theme = tokyoNight;
 
 const file = `
 const ENDPOINT = "https://one.test.glx.global/graphql"
@@ -76,13 +79,13 @@ function App() {
     <>
       <CodeMirror
         value={value}
-        height="400px"
+        theme={theme}
         extensions={[javascript()]}
         onChange={(v) => setValue(v)}
       />
       <CodeMirror
         value={query}
-        height="200px"
+        theme={theme}
         extensions={[graphql()]}
         onChange={(v) => setQuery(v)}
         onCreateEditor={(v) => (view.current = v)}
@@ -91,7 +94,7 @@ function App() {
         onClick={async () => {
           setOutput("");
           const { headers, endpoint, variables } = await run(value);
-          console.debug({ headers, endpoint, query, variables });
+          console.log("Constructed:", { headers, endpoint, variables });
 
           if (view.current) {
             const schemaJson = await gql(

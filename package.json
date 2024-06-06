@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@codemirror/lang-javascript": "^6.2.2",
+    "@uiw/codemirror-theme-tokyo-night": "^4.22.1",
+    "@uiw/codemirror-themes": "^4.22.1",
     "@uiw/react-codemirror": "^4.22.1",
     "cm6-graphql": "^0.0.15",
     "codemirror": "^6.0.1",
