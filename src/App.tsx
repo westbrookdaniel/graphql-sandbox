@@ -6,7 +6,7 @@ import { graphql, updateSchema } from "cm6-graphql";
 import * as Comlink from "comlink";
 import { IntrospectionQuery } from "./intro";
 import { buildClientSchema } from "graphql";
-import { tokyoNight } from "@uiw/codemirror-theme-tokyo-night";
+import { tokyoNightInit } from "@uiw/codemirror-theme-tokyo-night";
 import { Button } from "./components/ui/button";
 import {
   Tabs,
@@ -23,7 +23,9 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-const theme = tokyoNight;
+const theme = tokyoNightInit({
+  settings: { background: "hsl(0 0% 3.9%)", gutterBackground: "hsl(0 0% 3.9%)" },
+});
 
 async function run(input: string) {
   const pre = `importScripts("https://unpkg.com/comlink/dist/umd/comlink.js");`;
