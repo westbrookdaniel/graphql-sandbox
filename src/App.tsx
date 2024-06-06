@@ -22,9 +22,14 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { Badge } from "./components/ui/badge";
+import { finished } from "stream";
 
 const theme = tokyoNightInit({
-  settings: { background: "hsl(0 0% 3.9%)", gutterBackground: "hsl(0 0% 3.9%)" },
+  settings: {
+    background: "hsl(0 0% 3.9%)",
+    gutterBackground: "hsl(0 0% 3.9%)",
+  },
 });
 
 async function run(input: string) {
@@ -69,34 +74,40 @@ function App() {
 
   const { tabs, updateTab, createTab, deleteTab } = useStore();
   const [selected, setSelected] = useState(tabs[0].id);
+  const [running, setRunning] = useState(false);
 
   const tab = tabs.find((t) => t.id === selected);
   if (!tab) throw new Error("Selected tab not found");
 
   async function handleRun() {
-    if (!tab) throw new Error("Selected tab not found");
-    updateTab({ id: tab.id, output: null });
+    setRunning(true);
+    try {
+      if (!tab) throw new Error("Selected tab not found");
+      updateTab({ id: tab.id, output: null });
 
-    const { headers, endpoint, variables } = await run(tab.script);
-    console.log("Constructed:", { headers, endpoint, variables });
+      const { headers, endpoint, variables } = await run(tab.script);
+      console.log("Constructed:", { headers, endpoint, variables });
 
-    if (view.current) {
-      const schemaJson = await gql(
-        IntrospectionQuery,
-        endpoint,
-        variables,
-        headers,
-      );
-      if (!schemaJson || schemaJson?.error) {
-        console.error(schemaJson.error ?? "Failed to get schema");
-      } else {
-        updateSchema(view.current, buildClientSchema(schemaJson.data));
+      if (view.current) {
+        const schemaJson = await gql(
+          IntrospectionQuery,
+          endpoint,
+          variables,
+          headers,
+        );
+        if (!schemaJson || schemaJson?.error) {
+          console.error(schemaJson.error ?? "Failed to get schema");
+        } else {
+          updateSchema(view.current, buildClientSchema(schemaJson.data));
+        }
       }
+
+      const json = await gql(tab.query, endpoint, variables, headers);
+
+      updateTab({ id: tab.id, output: json });
+    } finally {
+      setRunning(false);
     }
-
-    const json = await gql(tab.query, endpoint, variables, headers);
-
-    updateTab({ id: tab.id, output: json });
   }
 
   return (
@@ -141,8 +152,10 @@ function App() {
           </TabsList>
 
           <div className="flex gap-2">
-            <Button onClick={handleRun}>Run</Button>
-            <ModeToggle />
+            <Button onClick={handleRun} disabled={running}>
+              Run
+            </Button>
+            {/* <ModeToggle /> */}
           </div>
         </div>
 
@@ -152,7 +165,11 @@ function App() {
         >
           <ResizablePanel defaultSize={50}>
             <ResizablePanelGroup direction="vertical">
-              <ResizablePanel defaultSize={50} className="flex flex-col">
+              <ResizablePanel
+                defaultSize={50}
+                className="flex flex-col relative"
+              >
+                <SectionLabel>Query</SectionLabel>
                 <CodeMirror
                   className="flex-1 overflow-auto"
                   height="100%"
@@ -164,7 +181,11 @@ function App() {
                 />
               </ResizablePanel>
               <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={75} className="flex flex-col">
+              <ResizablePanel
+                defaultSize={75}
+                className="flex flex-col relative"
+              >
+                <SectionLabel>Script</SectionLabel>
                 <CodeMirror
                   className="flex-1 overflow-auto"
                   height="100%"
@@ -177,7 +198,8 @@ function App() {
             </ResizablePanelGroup>
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={50} className="flex flex-col">
+          <ResizablePanel defaultSize={50} className="flex flex-col relative">
+            <SectionLabel>Result</SectionLabel>
             <CodeMirror
               className="flex-1 overflow-auto"
               height="100%"
@@ -189,6 +211,17 @@ function App() {
         </ResizablePanelGroup>
       </Tabs>
     </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Badge
+      className="absolute text-muted-foreground border-t-0 border-r-0 top-0 right-0 z-10 rounded-r-none rounded-t-none"
+      variant="outline"
+    >
+      {children}
+    </Badge>
   );
 }
 

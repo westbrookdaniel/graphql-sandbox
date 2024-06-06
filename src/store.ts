@@ -1,26 +1,21 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
+import { gql } from "graphql-tag";
+import { Kind, OperationDefinitionNode } from "graphql";
 
-const scriptFile = `const ENDPOINT = "https://one.test.glx.global/graphql"
+const scriptFile = `const ENDPOINT = "https://example.com/graphql"
 
 async function headers() {
   return {
-    Authorization: "Api-Key ZjFjYjc2Y2MtZDcwNy00MWJhLTgzZGItMjg3NmVkNjIxMjBm"
+    Authorization: ""
   }
 }
 
 async function variables() {
-  return { 
-    query: { id: 12 }
-  }
+  return {}
 }`;
 
-const queryFile = `query($query: JSON!) {
-  task(query: $query) { 
-    id
-    task
-  }
-}`;
+const queryFile = `{}`;
 
 interface Tab {
   id: string;
@@ -55,6 +50,18 @@ export const useStore = create<BearState>()(
             const newTabs = [...t.tabs];
             const found = newTabs.find((t) => t.id === tab.id);
             if (!found) throw new Error("Tab not found");
+
+            if (!tab.name && tab.query) {
+              // tab.name = gql(tab.query)
+              try {
+                const doc = gql(tab.query);
+                const op: OperationDefinitionNode = doc.definitions.find(
+                  (d) => d.kind === Kind.OPERATION_DEFINITION,
+                ) as any;
+                tab.name = op?.name?.value ?? cap(op.operation);
+              } catch {}
+            }
+
             Object.assign(found, tab);
             return { tabs: newTabs };
           });
@@ -90,3 +97,7 @@ export const useStore = create<BearState>()(
     ),
   ),
 );
+
+function cap(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}

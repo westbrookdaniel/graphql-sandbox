@@ -56,6 +56,9 @@ importers:
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
+      graphql-tag:
+        specifier: ^2.12.6
+        version: 2.12.6(graphql@16.8.1)
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -1363,6 +1366,12 @@ packages:
     hasBin: true
     peerDependencies:
       graphql: ^15.5.0 || ^16.0.0
+
+  graphql-tag@2.12.6:
+    resolution: {integrity: sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      graphql: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
 
   graphql@16.8.1:
     resolution: {integrity: sha512-59LZHPdGZVh695Ud9lRzPBVTtlX9ZCV150Er2W43ro37wVof0ctenSaskPPjN7lVTIN8mSZt8PHUNKZuNQUuxw==}
@@ -3320,6 +3329,11 @@ snapshots:
       graphql: 16.8.1
       nullthrows: 1.1.1
       vscode-languageserver-types: 3.17.5
+
+  graphql-tag@2.12.6(graphql@16.8.1):
+    dependencies:
+      graphql: 16.8.1
+      tslib: 2.6.3
 
   graphql@16.8.1: {}
 
