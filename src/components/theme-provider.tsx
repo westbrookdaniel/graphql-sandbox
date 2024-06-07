@@ -14,7 +14,7 @@ type ThemeProviderState = {
 };
 
 const initialState: ThemeProviderState = {
-  theme: "dark", // TODO make system
+  theme: "system",
   setTheme: () => null,
 };
 
@@ -70,4 +70,19 @@ export const useTheme = () => {
     throw new Error("useTheme must be used within a ThemeProvider");
 
   return context;
+};
+
+export const useCalculatedTheme = () => {
+  let { theme } = useContext(ThemeProviderContext);
+
+  if (theme === undefined)
+    throw new Error("useTheme must be used within a ThemeProvider");
+
+  if (theme === "system") {
+    theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  }
+
+  return theme;
 };

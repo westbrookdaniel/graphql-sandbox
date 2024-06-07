@@ -3,21 +3,21 @@ import { devtools, persist } from "zustand/middleware";
 import { gql } from "graphql-tag";
 import { Kind, OperationDefinitionNode } from "graphql";
 
-const scriptFile = `const ENDPOINT = "https://example.com/graphql"
+const scriptFile = `const ENDPOINT = 'https://example.com/graphql';
 
 async function headers() {
   return {
-    Authorization: ""
-  }
+    Authorization: '',
+  };
 }
 
 async function variables() {
-  return {}
+  return {};
 }`;
 
 const queryFile = `{}`;
 
-interface Tab {
+export interface Tab {
   id: string;
   name: string;
   script: string;
@@ -25,14 +25,14 @@ interface Tab {
   output: any;
 }
 
-interface BearState {
+interface State {
   tabs: Tab[];
   createTab: () => string;
   deleteTab: (id: string) => void;
   updateTab: (tab: Partial<Omit<Tab, "id">> & { id: string }) => void;
 }
 
-export const useStore = create<BearState>()(
+export const useStore = create<State>()(
   devtools(
     persist(
       (set) => ({
