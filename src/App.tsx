@@ -25,12 +25,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "./components/ui/tabs";
-import {
-  PaintBrushIcon,
-  ArchiveBoxIcon,
-  PlayIcon,
-  XMarkIcon,
-} from "@heroicons/react/16/solid";
+import { PaintBrushIcon, PlayIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { useStore } from "./store";
 import {
   ResizableHandle,
