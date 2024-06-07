@@ -1,4 +1,10 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import * as prettier from "prettier";
 import * as babel from "prettier/parser-babel";
 import * as prettierPluginEstree from "prettier/plugins/estree";
@@ -102,7 +108,7 @@ function App() {
   const tab = tabs.find((t) => t.id === selected);
   if (!tab) throw new Error("Selected tab not found");
 
-  async function handleRun() {
+  const handleRun = useCallback(async () => {
     setRunning(true);
     try {
       if (!tab) throw new Error("Selected tab not found");
@@ -131,9 +137,9 @@ function App() {
     } finally {
       setRunning(false);
     }
-  }
+  }, [tab, updateTab]);
 
-  async function prettify() {
+  const prettify = useCallback(async () => {
     if (!tab) throw new Error("Selected tab not found");
 
     let prettyQuery;
@@ -164,7 +170,22 @@ function App() {
       query: prettyQuery,
       script: prettyScript,
     });
-  }
+  }, [tab, updateTab]);
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        handleRun();
+      }
+      if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        prettify();
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, [handleRun, prettify]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -209,7 +230,7 @@ function App() {
 
           <div className="flex gap-2">
             <ArchiveMenu tab={tab} setSelected={setSelected} />
-            <Tooltip label="Prettify Query (Ctr-Shift-P)">
+            <Tooltip label="Prettify Query (Ctr-P)">
               <Button onClick={prettify} variant="secondary" size="icon">
                 <PaintBrushIcon className="size-4" />
               </Button>
