@@ -3,7 +3,10 @@ import { devtools, persist } from "zustand/middleware";
 import { gql } from "graphql-tag";
 import { Kind, OperationDefinitionNode } from "graphql";
 
-const scriptFile = `const ENDPOINT = 'https://example.com/graphql';
+const scriptFile = `// Ensure ENDPOINT, headers, and variables are defined
+// These are required, and if not provided the app will crash
+
+const ENDPOINT = 'https://example.com/graphql';
 
 async function headers() {
   return {
@@ -15,7 +18,27 @@ async function variables() {
   return {};
 }`;
 
-const queryFile = `{}`;
+const queryFile = `# Welcome to GraphQL Sandbox
+#
+# GraphQL Sandbox is a tool similar to GraphiQL for writing, validating, and
+# testing GraphQL queries, with a focus on scripting.
+#
+# Use this panel to write a GraphQL query, an example  might look like:
+#
+#     {
+#       field(arg: "value") {
+#         subField
+#       }
+#     }
+#
+# Keyboard shortcuts:
+#
+#         Prettify:  Ctrl-P (or press the prettify button)
+#
+#    Execute Query:  Ctrl-Enter (or press the play button)
+#
+#    Auto Complete:  Ctrl-Space (or just start typing)
+#`;
 
 export interface Tab {
   id: string;

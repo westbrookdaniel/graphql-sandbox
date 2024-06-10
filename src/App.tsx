@@ -40,7 +40,6 @@ import { Tooltip } from "./components/ui/tooltip";
 import { ArchiveMenu } from "./components/archive-menu";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
-import { setDefaultResultOrder } from "dns";
 
 async function run(input: string) {
   const pre = `importScripts("https://unpkg.com/comlink/dist/umd/comlink.js");`;
@@ -194,8 +193,6 @@ function App() {
     return () => document.removeEventListener("keydown", down);
   }, [handleRun, prettify]);
 
-  const querySize = useResizeDetector({ handleWidth: false });
-  const scriptSize = useResizeDetector({ handleWidth: false });
   const resultSize = useResizeDetector({ handleWidth: false });
 
   return (
@@ -256,64 +253,54 @@ function App() {
                 defaultSize={50}
                 className="flex flex-col relative"
               >
-                <div
-                  ref={querySize.ref}
-                  className="h-full w-full flex-1 flex flex-col"
-                >
-                  <div className="flex flex-col gap-2 items-center absolute top-8 right-2 z-20">
-                    <Tooltip label="Execute Query (Ctr-Enter)">
-                      <Button
-                        onClick={handleRun}
-                        disabled={running}
-                        size="icon"
-                        className="h-10 w-10 rounded-full"
-                      >
-                        <PlayIcon className="size-4" />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip label="Prettify Query (Ctr-P)">
-                      <Button
-                        onClick={prettify}
-                        variant="secondary"
-                        size="icon"
-                        className="h-10 w-10 rounded-full"
-                      >
-                        <PaintBrushIcon className="size-4" />
-                      </Button>
-                    </Tooltip>
-                  </div>
-
-                  <SectionLabel>Query</SectionLabel>
-                  <CodeMirror
-                    className="flex-1 overflow-auto text-[16px]"
-                    height={`${querySize.height}px`}
-                    value={tab.query}
-                    theme={theme}
-                    extensions={[graphql()]}
-                    onChange={(v) => updateTab({ id: tab.id, query: v })}
-                    onCreateEditor={(v) => (view.current = v)}
-                  />
+                <div className="flex flex-col gap-2 items-center absolute top-8 right-2 z-20">
+                  <Tooltip label="Execute Query (Ctr-Enter)">
+                    <Button
+                      onClick={handleRun}
+                      disabled={running}
+                      size="icon"
+                      className="h-10 w-10 rounded-full"
+                    >
+                      <PlayIcon className="size-4" />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip label="Prettify (Ctr-P)">
+                    <Button
+                      onClick={prettify}
+                      variant="secondary"
+                      size="icon"
+                      className="h-10 w-10 rounded-full"
+                    >
+                      <PaintBrushIcon className="size-4" />
+                    </Button>
+                  </Tooltip>
                 </div>
+
+                <SectionLabel>Query</SectionLabel>
+                <CodeMirror
+                  className="flex-1 overflow-auto text-[16px]"
+                  height={"100%"}
+                  value={tab.query}
+                  theme={theme}
+                  extensions={[graphql()]}
+                  onChange={(v) => updateTab({ id: tab.id, query: v })}
+                  onCreateEditor={(v) => (view.current = v)}
+                />
               </ResizablePanel>
               <ResizableHandle withHandle />
               <ResizablePanel
-                defaultSize={75}
+                defaultSize={40}
                 className="flex flex-col relative"
               >
-                <div
-                  ref={scriptSize.ref}
-                  className="h-full w-full flex-1 flex flex-col"
-                >
-                  <SectionLabel>Script</SectionLabel>
-                  <CodeMirror
-                    className="flex-1 overflow-auto text-[16px]"
-                    height={`${scriptSize.height}px`}
-                    value={tab.script}
-                    theme={theme}
-                    extensions={[javascript()]}
-                    onChange={(v) => updateTab({ id: tab.id, script: v })}
-                  />
-                </div>
+                <SectionLabel>Script</SectionLabel>
+                <CodeMirror
+                  className="flex-1 overflow-auto text-[16px]"
+                  height={"100%"}
+                  value={tab.script}
+                  theme={theme}
+                  extensions={[javascript()]}
+                  onChange={(v) => updateTab({ id: tab.id, script: v })}
+                />
               </ResizablePanel>
             </ResizablePanelGroup>
           </ResizablePanel>
@@ -364,7 +351,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function getMessage(error: any) {
   const m = error?.message;
   if (!m) return "Something went wrong sending the request";
-  if (m === "Failed to fetch") return "Failed to reach server endpoint";
+  if (m === "Failed to fetch") return "Failed to reach server. Check your defined variable ENDPOINT";
   return m;
 }
 
