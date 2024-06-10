@@ -23,7 +23,9 @@ const queryFile = `# Welcome to GraphQL Sandbox
 # GraphQL Sandbox is a tool similar to GraphiQL for writing, validating, and
 # testing GraphQL queries, with a focus on scripting.
 #
-# Use this panel to write a GraphQL query, an example  might look like:
+# Schema aware auto complete is available but not until after a successful request.
+#
+# You can use this panel to write a GraphQL query, an example might look like:
 #
 #     {
 #       field(arg: "value") {
@@ -34,9 +36,7 @@ const queryFile = `# Welcome to GraphQL Sandbox
 # Keyboard shortcuts:
 #
 #         Prettify:  Ctrl-P (or press the prettify button)
-#
 #    Execute Query:  Ctrl-Enter (or press the play button)
-#
 #    Auto Complete:  Ctrl-Space (or just start typing)
 #`;
 
