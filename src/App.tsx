@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useResizeDetector } from "react-resize-detector";
 import * as prettier from "prettier";
 import * as babel from "prettier/parser-babel";
 import * as prettierPluginEstree from "prettier/plugins/estree";
@@ -107,7 +108,6 @@ function App() {
     setRunning(true);
     try {
       if (!tab) throw new Error("Selected tab not found");
-      updateTab({ id: tab.id, output: null });
 
       const { headers, endpoint, variables } = await run(tab.script);
       console.log("Constructed:", { headers, endpoint, variables });
@@ -182,6 +182,10 @@ function App() {
     return () => document.removeEventListener("keydown", down);
   }, [handleRun, prettify]);
 
+  const querySize = useResizeDetector({ handleWidth: false });
+  const scriptSize = useResizeDetector({ handleWidth: false });
+  const resultSize = useResizeDetector({ handleWidth: false });
+
   return (
     <div className="min-h-screen flex flex-col">
       <Tabs
@@ -192,7 +196,7 @@ function App() {
         <div className="flex w-full justify-between">
           <TabsList>
             {tabs.map((t) => (
-              <TabsTrigger value={t.id}>
+              <TabsTrigger value={t.id} key={t.id}>
                 <div className="flex w-full justify-between">
                   <p>{t.name}</p>
                   {tabs.length === 1 || selected !== t.id ? null : (
@@ -223,18 +227,8 @@ function App() {
             </TabsFakeTrigger>
           </TabsList>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <ArchiveMenu tab={tab} setSelected={setSelected} />
-            <Tooltip label="Prettify Query (Ctr-P)">
-              <Button onClick={prettify} variant="secondary" size="icon">
-                <PaintBrushIcon className="size-4" />
-              </Button>
-            </Tooltip>
-            <Tooltip label="Execute Query (Ctr-Enter)">
-              <Button onClick={handleRun} disabled={running} size="icon">
-                <PlayIcon className="size-4" />
-              </Button>
-            </Tooltip>
             <ModeToggle />
           </div>
         </div>
@@ -249,45 +243,83 @@ function App() {
                 defaultSize={50}
                 className="flex flex-col relative"
               >
-                <SectionLabel>Query</SectionLabel>
-                <CodeMirror
-                  className="flex-1 overflow-auto"
-                  height="100%"
-                  value={tab.query}
-                  theme={theme}
-                  extensions={[graphql()]}
-                  onChange={(v) => updateTab({ id: tab.id, query: v })}
-                  onCreateEditor={(v) => (view.current = v)}
-                />
+                <div
+                  ref={querySize.ref}
+                  className="h-full w-full flex-1 flex flex-col"
+                >
+                  <div className="flex flex-col gap-2 items-center absolute top-8 right-2 z-20">
+                    <Tooltip label="Execute Query (Ctr-Enter)">
+                      <Button
+                        onClick={handleRun}
+                        disabled={running}
+                        size="icon"
+                        className="h-10 w-10 rounded-full"
+                      >
+                        <PlayIcon className="size-4" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip label="Prettify Query (Ctr-P)">
+                      <Button
+                        onClick={prettify}
+                        variant="secondary"
+                        size="icon"
+                        className="h-10 w-10 rounded-full"
+                      >
+                        <PaintBrushIcon className="size-4" />
+                      </Button>
+                    </Tooltip>
+                  </div>
+
+                  <SectionLabel>Query</SectionLabel>
+                  <CodeMirror
+                    className="flex-1 overflow-auto text-[16px]"
+                    height={`${querySize.height}px`}
+                    value={tab.query}
+                    theme={theme}
+                    extensions={[graphql()]}
+                    onChange={(v) => updateTab({ id: tab.id, query: v })}
+                    onCreateEditor={(v) => (view.current = v)}
+                  />
+                </div>
               </ResizablePanel>
               <ResizableHandle withHandle />
               <ResizablePanel
                 defaultSize={75}
                 className="flex flex-col relative"
               >
-                <SectionLabel>Script</SectionLabel>
-                <CodeMirror
-                  className="flex-1 overflow-auto"
-                  height="100%"
-                  value={tab.script}
-                  theme={theme}
-                  extensions={[javascript()]}
-                  onChange={(v) => updateTab({ id: tab.id, script: v })}
-                />
+                <div
+                  ref={scriptSize.ref}
+                  className="h-full w-full flex-1 flex flex-col"
+                >
+                  <SectionLabel>Script</SectionLabel>
+                  <CodeMirror
+                    className="flex-1 overflow-auto text-[16px]"
+                    height={`${scriptSize.height}px`}
+                    value={tab.script}
+                    theme={theme}
+                    extensions={[javascript()]}
+                    onChange={(v) => updateTab({ id: tab.id, script: v })}
+                  />
+                </div>
               </ResizablePanel>
             </ResizablePanelGroup>
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={50} className="flex flex-col relative">
-            <SectionLabel>Result</SectionLabel>
-            <CodeMirror
-              className="flex-1 overflow-auto"
-              height="100%"
-              value={JSON.stringify(tab.output, undefined, 2)}
-              theme={theme}
-              editable={false}
-              extensions={[json()]}
-            />
+            <div
+              ref={resultSize.ref}
+              className="h-full w-full flex-1 flex flex-col"
+            >
+              <SectionLabel>Result</SectionLabel>
+              <CodeMirror
+                className="flex-1 overflow-auto text-[16px]"
+                height={`${resultSize.height}px`}
+                value={JSON.stringify(tab.output, undefined, 2)}
+                theme={theme}
+                editable={false}
+                extensions={[json()]}
+              />
+            </div>
           </ResizablePanel>
         </ResizablePanelGroup>
       </Tabs>
@@ -298,7 +330,7 @@ function App() {
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <Badge
-      className="absolute text-muted-foreground border-t-0 border-r-0 top-0 right-0 z-10 rounded-r-none rounded-t-none"
+      className="absolute text-muted-foreground border-t-0 border-r-0 top-0 right-0 z-10 rounded-r-none rounded-t-none bg-background"
       variant="outline"
     >
       {children}
