@@ -38,6 +38,9 @@ import { ModeToggle } from "./components/mode-toggle";
 import { useCalculatedTheme } from "./components/theme-provider";
 import { Tooltip } from "./components/ui/tooltip";
 import { ArchiveMenu } from "./components/archive-menu";
+import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import { setDefaultResultOrder } from "dns";
 
 async function run(input: string) {
   const pre = `importScripts("https://unpkg.com/comlink/dist/umd/comlink.js");`;
@@ -82,6 +85,11 @@ function App() {
   const { tabs, updateTab, createTab, deleteTab } = useStore();
   const [selected, setSelected] = useState(tabs[0].id);
   const [running, setRunning] = useState(false);
+  const [error, setError] = useState<any>(null);
+
+  useEffect(() => {
+    setError(null);
+  }, [selected]);
 
   const t = useCalculatedTheme();
 
@@ -106,6 +114,7 @@ function App() {
 
   const handleRun = useCallback(async () => {
     setRunning(true);
+    setError(null);
     try {
       if (!tab) throw new Error("Selected tab not found");
 
@@ -129,6 +138,9 @@ function App() {
       const json = await gql(tab.query, endpoint, variables, headers);
 
       updateTab({ id: tab.id, output: json });
+    } catch (e) {
+      setError(e);
+      updateTab({ id: tab.id, output: undefined });
     } finally {
       setRunning(false);
     }
@@ -236,6 +248,7 @@ function App() {
         <ResizablePanelGroup
           direction="horizontal"
           className="max-w-full rounded-lg border flex-1"
+          key={tab.id}
         >
           <ResizablePanel defaultSize={50}>
             <ResizablePanelGroup direction="vertical">
@@ -319,6 +332,16 @@ function App() {
                 editable={false}
                 extensions={[json()]}
               />
+
+              {error ? (
+                <div className="absolute bottom-6 px-6 w-full">
+                  <Alert variant="error">
+                    <ExclamationTriangleIcon className="h-5 w-5" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{getMessage(error)}</AlertDescription>
+                  </Alert>
+                </div>
+              ) : null}
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
@@ -336,6 +359,13 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       {children}
     </Badge>
   );
+}
+
+function getMessage(error: any) {
+  const m = error?.message;
+  if (!m) return "Something went wrong sending the request";
+  if (m === "Failed to fetch") return "Failed to reach server endpoint";
+  return m;
 }
 
 export default App;

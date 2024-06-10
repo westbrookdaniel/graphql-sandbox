@@ -42,7 +42,7 @@ export const useStore = create<State>()(
             name: "Query",
             script: scriptFile,
             query: queryFile,
-            output: null,
+            output: undefined,
           },
         ],
         updateTab: (tab) => {
@@ -83,7 +83,7 @@ export const useStore = create<State>()(
                   name: "Query",
                   script: scriptFile,
                   query: queryFile,
-                  output: null,
+                  output: undefined,
                 },
               ],
             };
