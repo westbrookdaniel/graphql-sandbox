@@ -56,16 +56,20 @@ function App() {
       console.log("Constructed:", { headers, endpoint, variables });
 
       if (view.current) {
-        const schemaJson = await gql(
-          IntrospectionQuery,
-          endpoint,
-          variables,
-          headers,
-        );
-        if (!schemaJson || schemaJson?.error) {
-          console.error(schemaJson.error ?? "Failed to get schema");
-        } else {
-          updateSchema(view.current, buildClientSchema(schemaJson.data));
+        try {
+          const schemaJson = await gql(
+            IntrospectionQuery,
+            endpoint,
+            variables,
+            headers,
+          );
+          if (!schemaJson || schemaJson?.error) {
+            console.error(schemaJson.error ?? "Failed to get schema");
+          } else {
+            updateSchema(view.current, buildClientSchema(schemaJson.data));
+          }
+        } catch (e) {
+          console.error(e);
         }
       }
 
