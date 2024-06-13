@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import * as prettier from "prettier";
 import * as babel from "prettier/parser-babel";
@@ -13,20 +7,12 @@ import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
 import { graphql, updateSchema } from "cm6-graphql";
-import * as Comlink from "comlink";
 import { IntrospectionQuery } from "./intro";
 // eslint-disable-next-line no-redeclare
 import { buildClientSchema, parse, print } from "graphql";
-import { tokyoNightInit } from "@uiw/codemirror-theme-tokyo-night";
-import { tokyoNightDayInit } from "@uiw/codemirror-theme-tokyo-night-day";
 import { Button } from "./components/ui/button";
-import {
-  Tabs,
-  TabsFakeTrigger,
-  TabsList,
-  TabsTrigger,
-} from "./components/ui/tabs";
-import { PaintBrushIcon, PlayIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { Tabs } from "./components/ui/tabs";
+import { PaintBrushIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { useStore } from "./store";
 import {
   ResizableHandle,
@@ -40,76 +26,25 @@ import { Tooltip } from "./components/ui/tooltip";
 import { ArchiveMenu } from "./components/archive-menu";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
-
-async function run(input: string) {
-  const pre = `importScripts("https://unpkg.com/comlink/dist/umd/comlink.js");`;
-  const suf = `Comlink.expose({ ENDPOINT, headers, variables })`;
-
-  const file = pre + "\n" + input + "\n" + suf;
-
-  const blob = new Blob([file], { type: "text/javascript" });
-  const url = URL.createObjectURL(blob);
-  const worker = new Worker(url);
-  const obj: any = Comlink.wrap(worker);
-
-  const endpoint = await obj.ENDPOINT;
-  const headers = await obj.headers();
-  const variables = await obj.variables();
-
-  return { headers, endpoint, variables };
-}
-
-async function gql(query: string, url: string, variables: any, headers: any) {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-    },
-    body: JSON.stringify({
-      operationName: null,
-      query,
-      variables,
-    }),
-  });
-
-  const data = await res.json();
-
-  return data;
-}
+import { run } from "./lib/run";
+import { gql } from "./lib/gql";
+import { TabsPanel } from "./components/tabs-panel";
 
 function App() {
   const view = useRef<EditorView>();
 
-  const { tabs, updateTab, createTab, deleteTab } = useStore();
-  const [selected, setSelected] = useState(tabs[0].id);
+  const { updateTab, getSelected, setSelected } = useStore();
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<any>(null);
 
+  const theme = useCalculatedTheme();
+
+  const tab = getSelected();
+  if (!tab) throw new Error("Selected tab not found");
+
   useEffect(() => {
     setError(null);
-  }, [selected]);
-
-  const t = useCalculatedTheme();
-
-  const theme = useMemo(() => {
-    return t === "light"
-      ? tokyoNightDayInit({
-          settings: {
-            background: "hsl(0 0% 100%)",
-            gutterBackground: "hsl(0 0% 100%)",
-          },
-        })
-      : tokyoNightInit({
-          settings: {
-            background: "hsl(0 0% 3.9%)",
-            gutterBackground: "hsl(0 0% 3.9%)",
-          },
-        });
-  }, [t]);
-
-  const tab = tabs.find((t) => t.id === selected);
-  if (!tab) throw new Error("Selected tab not found");
+  }, [tab.id]);
 
   const handleRun = useCallback(async () => {
     setRunning(true);
@@ -145,7 +80,7 @@ function App() {
     }
   }, [tab, updateTab]);
 
-  const prettify = useCallback(async () => {
+  const handlePretty = useCallback(async () => {
     if (!tab) throw new Error("Selected tab not found");
 
     let prettyQuery;
@@ -186,55 +121,24 @@ function App() {
       }
       if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        prettify();
+        handlePretty();
       }
     };
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, [handleRun, prettify]);
+  }, [handleRun, handlePretty]);
 
   const resultSize = useResizeDetector({ handleWidth: false });
 
   return (
     <div className="min-h-screen flex flex-col">
       <Tabs
-        value={selected}
+        value={tab.id}
         onValueChange={setSelected}
         className="p-4 flex-1 flex flex-col gap-3"
       >
         <div className="flex w-full justify-between">
-          <TabsList>
-            {tabs.map((t) => (
-              <TabsTrigger value={t.id} key={t.id}>
-                <div className="flex w-full justify-between">
-                  <p>{t.name}</p>
-                  {tabs.length === 1 || selected !== t.id ? null : (
-                    <Button
-                      variant="ghost"
-                      size="xs"
-                      onClick={() => {
-                        setSelected(
-                          tabs.indexOf(t) === 0 ? tabs[1].id : tabs[0].id,
-                        );
-                        deleteTab(t.id);
-                      }}
-                    >
-                      <XMarkIcon className="size-4" />
-                    </Button>
-                  )}
-                </div>
-              </TabsTrigger>
-            ))}
-            <TabsFakeTrigger
-              value="add"
-              onClick={() => {
-                const id = createTab();
-                setSelected(id);
-              }}
-            >
-              Add +
-            </TabsFakeTrigger>
-          </TabsList>
+          <TabsPanel />
 
           <div className="flex gap-2 items-center">
             <ArchiveMenu tab={tab} setSelected={setSelected} />
@@ -266,7 +170,7 @@ function App() {
                   </Tooltip>
                   <Tooltip label="Prettify (Ctr-P)">
                     <Button
-                      onClick={prettify}
+                      onClick={handlePretty}
                       variant="secondary"
                       size="icon"
                       className="h-10 w-10 rounded-full"
@@ -351,7 +255,8 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function getMessage(error: any) {
   const m = error?.message;
   if (!m) return "Something went wrong sending the request";
-  if (m === "Failed to fetch") return "Failed to reach server. Check your defined variable ENDPOINT";
+  if (m === "Failed to fetch")
+    return "Failed to reach server. Check your defined variable ENDPOINT";
   return m;
 }
 

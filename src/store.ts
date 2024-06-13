@@ -53,12 +53,15 @@ interface State {
   createTab: () => string;
   deleteTab: (id: string) => void;
   updateTab: (tab: Partial<Omit<Tab, "id">> & { id: string }) => void;
+  _selected: string;
+  getSelected: () => Tab;
+  setSelected: (id: string) => void;
 }
 
 export const useStore = create<State>()(
   devtools(
     persist(
-      (set) => ({
+      (set, get) => ({
         tabs: [
           {
             id: crypto.randomUUID(),
@@ -112,6 +115,19 @@ export const useStore = create<State>()(
             };
           });
           return id;
+        },
+        _selected: crypto.randomUUID(),
+        setSelected: (id) => {
+          set({ _selected: id });
+        },
+        getSelected: () => {
+          const s = get();
+          const found = s.tabs.find((t) => t.id === s._selected);
+          if (!found) {
+            set({ _selected: s.tabs[0].id });
+            return s.tabs[0];
+          }
+          return found;
         },
       }),
       {
